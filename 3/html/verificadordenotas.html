@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificador de nota</title>
+    <style>
+        body {
+        background: #241a2e;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+    h1 {
+        color: #faf9f9;
+        font-size: 28px;
+        margin-top: 80px;
+        
+    }
+    div {
+        margin-top: 50px;
+        background: #29163e;
+        padding: 50px;
+        border-radius: 12px;
+        text-align: center;
+        width: 400px;
+        box-shadow: 0 0 20px rgba(153, 0, 255, 0.743);
+    }
+    input {
+        display: block;
+        width: 100%;
+        margin: 8px 0;
+        padding: 10px;
+        border-radius: 6px;
+        border: none;
+        background: #59218e;
+        color: white;
+        box-sizing: border-box;
+    }
+button {
+        margin-top: 15px;
+        width: 100%;
+        padding: 12px;
+        background: #e94560;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+    #resultado {
+    background-color: #59218e4e;
+    color: white;
+    padding: 5px;
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: none;
+}
+
+#btnLimpar {
+    background: #888;
+}
+
+#btnLimpar:hover {
+    background: #666;
+}
+
+    button:hover {
+        background: #e71e3f;
+    }
+   
+
+    </style>
+</head>
+<body>
+    <h1>Verificador de nota</h1>
+    <div class="nota">
+       <input type="number" name="nota" id="inota">
+       <button onclick="verificarNota()">Verificar</button>
+       <button id="btnLimpar" onclick="limpar()">Limpar</button>
+       <p id="resultado">Resutado</p>
+       
+    </div>
+    <script>
+        function limpar() {
+            document.getElementById("inota").value = ""
+            document.getElementById("resultado").textContent = ""
+            document.getElementById("resultado").style.display = "none" 
+}
+        function verificarNota() {
+        let media = Number(document.getElementById("inota").value)
+        
+    if (media >= 7) {
+        document.getElementById("resultado").textContent = "Aprovado"
+    } else if (media >= 5) {
+        document.getElementById("resultado").textContent ="Recuperação"
+    } else {
+        document.getElementById("resultado").textContent="Reprovado"
+    }
+        document.getElementById("resultado").style.display = "block"
+}
+    
+    </script>
+</body>
+</html>

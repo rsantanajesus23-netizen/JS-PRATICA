@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clima da Cidade</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main>
+        <h1>Qual o clima aí?</h1>
+
+        <form id="form-clima">
+            <input type="text" id="input-cidade" placeholder="Digite o nome da cidade" required>
+            <button type="submit">Buscar</button>
+        </form>
+
+        <p id="erro"></p>
+
+        <section id="resultado" class="escondido">
+            <h2 id="nome-cidade"></h2>
+            <p id="temperatura" class="temperatura"></p>
+            <p id="descricao-clima"></p>
+            <p id="vento"></p>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

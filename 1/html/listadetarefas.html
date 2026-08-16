@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tarefas</title>
+    <style>
+       body {
+    background-color: #0a2a3a;
+    text-align: center;
+    color: white;
+}
+
+input {
+    padding: 8px;
+    width: 250px;
+    border-radius: 3px;
+    border: 1px solid #1a6a8a;
+    background-color: #0d3d56;
+    color: white;
+}
+
+button {
+    border-radius: 3px;
+    padding: 8px;
+    background-color: #1a8abf;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+ul#lista {
+    width: 300px;
+    margin: 20px auto;
+    text-align: left;
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    background-color: #0d3d56;
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+}
+
+li button {
+    background-color: #e94560;
+    padding: 4px 8px;
+    font-size: 12px;
+}
+    </style>
+</head>
+<body>
+    <h1>Lista de tarefas</h1>
+    <input type="text" id="tarefa" placeholder="Nova tarefa">
+    <button onclick="adicionar()">Adicionar</button>
+    <ul id="lista"></ul>
+
+    <script>
+        // 1. Carregar as tarefas salvas assim que a página abrir
+        window.onload = function() {
+            let tarefasSalvas = JSON.parse(localStorage.getItem("minhasTarefas")) || [];
+            tarefasSalvas.forEach(tarefa => criarElementoTarefa(tarefa));
+        };
+
+        function adicionar() {
+            let input = document.getElementById("tarefa");
+            let texto = input.value.trim();
+            
+            if (texto === "") return;
+
+            // Criar o elemento visual
+            criarElementoTarefa(texto);
+
+            // 2. Salvar no localStorage
+            salvarNoLocalStorage();
+
+            // Limpar o campo de texto
+            input.value = "";
+        }
+
+        // Função auxiliar para criar a tarefa na tela
+        function criarElementoTarefa(texto) {
+            let item = document.createElement("li");
+            item.textContent = texto;
+
+            let botao = document.createElement("button");
+            botao.textContent = "X";
+            botao.onclick = function() {
+                item.remove();
+                salvarNoLocalStorage(); // 3. Salvar novamente ao excluir
+            };
+
+            item.appendChild(botao);
+            document.getElementById("lista").appendChild(item);
+        }
+
+        // Função responsável por atualizar o localStorage
+        function salvarNoLocalStorage() {
+            let itensLista = document.querySelectorAll("#lista li");
+            let listaDeTextos = [];
+
+            // Pega o texto de cada 'li' (removendo o 'X' do botão)
+            itensLista.forEach(item => {
+                listaDeTextos.push(item.firstChild.textContent);
+            });
+
+            // Transforma o array em texto e salva
+            localStorage.setItem("minhasTarefas", JSON.stringify(listaDeTextos));
+        }
+    </script>
+</body>
+</html>

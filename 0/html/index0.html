@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Personagem</title>
+    <style>
+        body {
+            background: #111;
+            color: white;
+            font-family: Arial;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .ficha {
+            background: #222;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        input {
+            display: block;
+            margin: 10px auto;
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: purple;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="ficha">
+        <input id="inputNome" placeholder="Nome do personagem">
+        <input id="inputPoder" placeholder="Poder">
+        <input id="inputNivel" type="number" placeholder="Nível">
+        <button onclick="criarFicha()">Criar ficha</button>
+
+        <h1 id="nome"></h1>
+        <p id="poder"></p>
+        <p id="nivel"></p>
+    </div>
+
+    <script>
+        function criarFicha() {
+            let personagem = {
+                nome: document.getElementById("inputNome").value,
+                poder: document.getElementById("inputPoder").value,
+                nivel: document.getElementById("inputNivel").value
+            }
+
+            document.getElementById("nome").textContent = personagem.nome
+            document.getElementById("poder").textContent = "Poder: " + personagem.poder
+            document.getElementById("nivel").textContent = "Nível: " + personagem.nivel
+        }
+    </script>
+</body>
+</html>

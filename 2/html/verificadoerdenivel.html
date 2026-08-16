@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perssonagem</title>
+    <style>
+    body {
+        background: #1a1a2e;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family: Arial, sans-serif;
+    }
+
+    div {
+       
+        background: #16213e;
+        padding: 50px;
+        border-radius: 12px;
+        text-align: center;
+        width: 400px;
+        box-shadow: 0 0 20px rgba(0, 0, 255, 0.3);
+    }
+
+    h1 {
+        color: #e94560;
+        font-size: 28px;
+        margin-top: 80px;
+        
+    }
+    #aviso {
+    color: #aaa;
+    font-size: 12px;
+    margin: 5px 0;
+}
+
+    input {
+        display: block;
+        width: 100%;
+        margin: 8px 0;
+        padding: 10px;
+        border-radius: 6px;
+        border: none;
+        background: #0f3460;
+        color: white;
+        box-sizing: border-box;
+    }
+
+    input::placeholder {
+        color: #aaa;
+    }
+
+    button {
+        margin-top: 15px;
+        width: 100%;
+        padding: 12px;
+        background: #e94560;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    button:hover {
+        background: #c73652;
+    }
+
+    #resultado {
+    margin-top: 15px;
+    color: #00d4ff;
+    font-size: 18px;
+    font-weight: bold;
+    background: #0f3460;
+    padding: 15px;
+    border-radius: 8px;
+}
+</style>
+</head>
+<body>
+    <h1>Personagem</h1>
+    <div>
+        <input type="text" id="nome" placeholder="Nome do personagem">
+        <input type="number" id="ataque" min="0" max="1000" placeholder="Ataque">
+        <input type="number" id="defesa" min="0" max="1000" placeholder="Defesa">
+        <input type="number" id="velocidade" min="0" max="1000" placeholder="Velocidade">
+        <p id="resultado"></p>
+        <p id="aviso">Valores máximos: 1000 por atributo</p>
+       <button onclick="calcular ()">Calcular poder</button>
+      
+    </div>
+    <script>
+    function calcular() {
+        
+        let nome = document.getElementById("nome").value
+        let ataque = Number(document.getElementById("ataque").value)
+        let defesa = Number(document.getElementById("defesa").value)
+        let velocidade = Number(document.getElementById("velocidade").value)
+        if (ataque > 1000 || defesa > 1000 || velocidade > 1000) {
+            document.getElementById("resultado").textContent = "Valor máximo por atributo é 1000!"
+            return
+        }
+
+        //let nivel = (ataque + defesa + velocidade) / 3 /* soma e divide*/
+
+        let nivel = ((ataque + defesa + velocidade) / 3).toFixed(0)
+        
+        document.getElementById("resultado").textContent = nome + " tem nível de poder: " + nivel
+    }
+</script>
+</body>
+</html>
