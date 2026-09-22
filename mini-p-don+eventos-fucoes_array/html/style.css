@@ -1,0 +1,77 @@
+/* Configuração geral e centralização da tela */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 50px;
+    margin: 0;
+}
+
+/* Container para organizar os campos e botões */
+input, button {
+    padding: 10px 14px;
+    margin: 4px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+input:focus {
+    outline: none;
+    border-color: #4a90e2;
+}
+
+/* Estilo dos Botões */
+#btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#btn:hover {
+    background-color: #218838;
+}
+
+#limpar {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#limpar:hover {
+    background-color: #c82333;
+}
+
+/* Estilo do Total */
+p {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    margin-top: 20px;
+}
+
+/* Estilo da Lista de Itens */
+#lista {
+    list-style: none;
+    padding: 0;
+    width: 300px;
+    margin-top: 15px;
+}
+
+#lista li {
+    background-color: #ffffff;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    color: #444;
+}

@@ -1,0 +1,23 @@
+body { 
+    font-family: sans-serif;
+    margin: 20px; 
+}
+
+.botoes {
+    display: flex; gap: 10px; 
+    margin-bottom: 15px; 
+    
+}
+button { 
+    padding: 8px 16px; 
+    cursor: pointer; 
+    background-color: #94e2e0; 
+}
+pre { 
+    background-color: #94c3e2; 
+    padding: 15px; 
+    border-radius: 5px; 
+}
+.erro{
+    color: red;
+}
