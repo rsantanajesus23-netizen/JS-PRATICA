@@ -1,0 +1,296 @@
+const express = require('express');
+const Database = require('better-sqlite3');
+const bcrypt = require('bcrypt');
+
+const app = express();
+const PORT = 3000;
+
+app.use(express.json());
+
+const db = new Database('loja.db', { verbose: console.log });
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS produtos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    preco REAL NOT NULL
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS usuarios_loja (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    senha TEXT NOT NULL
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS pedidos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios_loja(id)
+  )
+`);
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS itens_pedido (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pedido_id INTEGER NOT NULL,
+    produto_id INTEGER NOT NULL,
+    quantidade INTEGER NOT NULL,
+    FOREIGN KEY (pedido_id) REFERENCES pedidos(id),
+    FOREIGN KEY (produto_id) REFERENCES produtos(id)
+  )
+`);
+
+// Transação: cria o pedido e todos os itens, ou não cria nada (tudo ou nada)
+const criarPedido = db.transaction((usuario_id, itens) => {
+  const stmtPedido = db.prepare('INSERT INTO pedidos (usuario_id) VALUES (?)');
+  const resultadoPedido = stmtPedido.run(usuario_id);
+  const pedidoId = resultadoPedido.lastInsertRowid;
+
+  const stmtItem = db.prepare(`
+    INSERT INTO itens_pedido (pedido_id, produto_id, quantidade)
+    VALUES (?, ?, ?)
+  `);
+
+  for (const item of itens) {
+    stmtItem.run(pedidoId, item.produto_id, item.quantidade);
+  }
+
+  return pedidoId;
+});
+
+app.get('/', (req, res) => {
+  res.send('Servidor e banco loja.db rodando com sucesso!');
+});
+
+// ===== USUÁRIOS =====
+
+app.post('/cadastro', async (req, res) => {
+  const { nome, email, senha } = req.body;
+
+  if (!nome || !email || !senha) {
+    return res.status(400).json({ erro: 'Nome, e-mail e senha são obrigatórios.' });
+  }
+
+  try {
+    const SALT_ROUNDS = 10;
+    const senhaHash = await bcrypt.hash(senha, SALT_ROUNDS);
+
+    const stmt = db.prepare(`
+      INSERT INTO usuarios_loja (nome, email, senha)
+      VALUES (?, ?, ?)
+    `);
+
+    const resultado = stmt.run(nome, email, senhaHash);
+
+    res.status(201).json({
+      mensagem: 'Usuário cadastrado com sucesso!',
+      usuario: {
+        id: resultado.lastInsertRowid,
+        nome,
+        email
+      }
+    });
+
+  } catch (erro) {
+    if (erro.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+      return res.status(400).json({ erro: 'E-mail já cadastrado.' });
+    }
+
+    res.status(500).json({ erro: 'Erro interno no servidor ao cadastrar usuário.' });
+  }
+});
+
+app.post('/login', async (req, res) => {
+  const { email, senha } = req.body;
+
+  if (!email || !senha) {
+    return res.status(400).json({ erro: 'E-mail e senha são obrigatórios.' });
+  }
+
+  try {
+    const stmt = db.prepare('SELECT * FROM usuarios_loja WHERE email = ?');
+    const usuario = stmt.get(email);
+
+    if (!usuario) {
+      return res.status(401).json({ erro: 'E-mail ou senha incorretos.' });
+    }
+
+    const senhaValida = await bcrypt.compare(senha, usuario.senha);
+
+    if (!senhaValida) {
+      return res.status(401).json({ erro: 'E-mail ou senha incorretos.' });
+    }
+
+    res.json({
+      mensagem: 'Login realizado com sucesso!',
+      usuario: {
+        id: usuario.id,
+        nome: usuario.nome,
+        email: usuario.email
+      }
+    });
+
+  } catch (erro) {
+    res.status(500).json({ erro: 'Erro interno no servidor ao realizar login.' });
+  }
+});
+
+// ===== PRODUTOS =====
+
+app.post('/produtos', (req, res) => {
+  const { nome, preco } = req.body;
+
+  if (!nome || typeof preco !== 'number' || preco < 0) {
+    return res.status(400).json({ erro: 'Informe o nome e um preço numérico maior ou igual a zero.' });
+  }
+
+  try {
+    const stmt = db.prepare('INSERT INTO produtos (nome, preco) VALUES (?, ?)');
+    const resultado = stmt.run(nome, preco);
+
+    res.status(201).json({
+      mensagem: 'Produto cadastrado com sucesso!',
+      produto: {
+        id: resultado.lastInsertRowid,
+        nome,
+        preco
+      }
+    });
+  } catch (erro) {
+    res.status(500).json({ erro: 'Erro interno ao cadastrar produto.' });
+  }
+});
+
+app.get('/produtos', (req, res) => {
+  try {
+    const stmt = db.prepare('SELECT * FROM produtos');
+    const produtos = stmt.all();
+
+    res.json(produtos);
+  } catch (erro) {
+    res.status(500).json({ erro: 'Erro interno ao buscar produtos.' });
+  }
+});
+
+app.put('/produtos/:id', (req, res) => {
+  const id = req.params.id;
+  const { nome, preco } = req.body;
+
+  if (!nome || typeof preco !== 'number' || preco < 0) {
+    return res.status(400).json({ erro: 'Informe o nome e um preço numérico maior ou igual a zero.' });
+  }
+
+  try {
+    const atualizar = db.prepare('UPDATE produtos SET nome = ?, preco = ? WHERE id = ?');
+    const resultado = atualizar.run(nome, preco, id);
+
+    if (resultado.changes === 0) {
+      return res.status(404).json({ erro: 'Produto não encontrado.' });
+    }
+
+    res.json({ mensagem: 'Produto atualizado com sucesso!' });
+  } catch (erro) {
+    res.status(500).json({ erro: 'Erro interno ao atualizar produto.' });
+  }
+});
+
+app.delete('/produtos/:id', (req, res) => {
+  const id = req.params.id;
+
+  try {
+    const apagar = db.prepare('DELETE FROM produtos WHERE id = ?');
+    const resultado = apagar.run(id);
+
+    if (resultado.changes === 0) {
+      return res.status(404).json({ erro: 'Produto não encontrado.' });
+    }
+
+    res.json({ mensagem: 'Produto apagado com sucesso!' });
+  } catch (erro) {
+    // Se o produto estiver preso a um pedido, o banco bloqueia e cai aqui
+    if (erro.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
+      return res.status(409).json({ erro: 'Não é possível deletar este produto pois ele está vinculado a pedidos existentes.' });
+    }
+
+    res.status(500).json({ erro: 'Erro interno ao apagar produto.' });
+  }
+});
+
+// ===== PEDIDOS =====
+
+app.post('/pedidos', (req, res) => {
+  const { usuario_id, itens } = req.body;
+
+  if (
+    typeof usuario_id !== 'number' ||
+    !Array.isArray(itens) ||
+    itens.length === 0 ||
+    itens.some(item =>
+      !item ||
+      typeof item.produto_id !== 'number' ||
+      !Number.isInteger(item.quantidade) ||
+      item.quantidade <= 0
+    )
+  ) {
+    return res.status(400).json({
+      erro: 'Informe usuario_id (número) e itens (lista não vazia, cada item com produto_id e quantidade inteira maior que zero).'
+    });
+  }
+
+  try {
+    const novoPedidoId = criarPedido(usuario_id, itens);
+
+    res.status(201).json({
+      mensagem: 'Pedido realizado com sucesso!',
+      pedido_id: novoPedidoId
+    });
+  } catch (erro) {
+    if (erro.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
+      return res.status(400).json({ erro: 'Usuário ou produto informado não existe no banco de dados.' });
+    }
+
+    res.status(500).json({ erro: 'Erro interno ao processar o pedido.' });
+  }
+});
+
+app.get('/pedidos/:id', (req, res) => {
+  // 1. Pega o id do pedido que veio na URL
+  const id = req.params.id;
+
+  try {
+    // 2. Junta itens_pedido com produtos, só do pedido pedido
+    const stmt = db.prepare(`
+      SELECT produtos.nome, produtos.preco, itens_pedido.quantidade
+      FROM itens_pedido
+      JOIN produtos ON itens_pedido.produto_id = produtos.id
+      WHERE itens_pedido.pedido_id = ?
+    `);
+
+    // 3. Lista com os itens do pedido (cada item é um objeto)
+    const itens = stmt.all(id);
+
+    // 4. Lista vazia = pedido inexistente (ou sem itens)
+    if (itens.length === 0) {
+      return res.status(404).json({ erro: 'Pedido não encontrado.' });
+    }
+
+    // 5. Soma preço × quantidade de cada item
+    const total = itens.reduce((acumulador, itemAtual) => {
+      return acumulador + itemAtual.preco * itemAtual.quantidade;
+    }, 0);
+
+    // 6. Devolve o pedido, os itens e o total
+    res.json({ pedido_id: Number(id), itens, total });
+  } catch (erro) {
+    res.status(500).json({ erro: 'Erro interno ao buscar pedido.' });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
+});

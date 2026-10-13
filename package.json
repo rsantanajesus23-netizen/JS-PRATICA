@@ -1,0 +1,25 @@
+{
+  "name": "js-pratica",
+  "version": "1.0.0",
+  "description": "",
+  "main": "teste-node.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rsantanajesus23-netizen/JS-PRATICA.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/rsantanajesus23-netizen/JS-PRATICA/issues"
+  },
+  "homepage": "https://github.com/rsantanajesus23-netizen/JS-PRATICA#readme",
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "express": "^5.2.1"
+  }
+}
