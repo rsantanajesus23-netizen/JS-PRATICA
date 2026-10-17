@@ -1,9 +1,19 @@
 const express = require('express');
 const Database = require('better-sqlite3');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 const PORT = 3000;
+
+// 1. Lê a chave do .env (process.env guarda as variáveis de ambiente)
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// 2. Sem chave, o servidor nem sobe, melhor que falhar só no login
+if (!JWT_SECRET) {
+  console.error('Falta JWT_SECRET no arquivo .env');
+  process.exit(1);
+}
 
 app.use(express.json());
 
@@ -62,6 +72,34 @@ const criarPedido = db.transaction((usuario_id, itens) => {
 
   return pedidoId;
 });
+
+// Middleware de Autenticação JWT
+const autenticar = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+
+  if (!authHeader) {
+    return res.status(401).json({ erro: 'Token de autenticação não fornecido.' });
+  }
+
+  const partes = authHeader.split(' ');
+  if (partes.length !== 2) {
+    return res.status(401).json({ erro: 'Erro no formato do token.' });
+  }
+
+  const [esquema, token] = partes;
+  if (!/^Bearer$/i.test(esquema)) {
+    return res.status(401).json({ erro: 'Token mal formatado.' });
+  }
+
+  jwt.verify(token, JWT_SECRET, (erro, payloadDecodificado) => {
+    if (erro) {
+      return res.status(401).json({ erro: 'Token inválido ou expirado.' });
+    }
+
+    req.usuario = payloadDecodificado;
+    next();
+  });
+};
 
 app.get('/', (req, res) => {
   res.send('Servidor e banco loja.db rodando com sucesso!');
@@ -126,8 +164,11 @@ app.post('/login', async (req, res) => {
       return res.status(401).json({ erro: 'E-mail ou senha incorretos.' });
     }
 
+    const token = jwt.sign({ id: usuario.id }, JWT_SECRET, { expiresIn: '1h' });
+
     res.json({
       mensagem: 'Login realizado com sucesso!',
+      token, // Token incluído corretamente na resposta
       usuario: {
         id: usuario.id,
         nome: usuario.nome,
@@ -212,7 +253,6 @@ app.delete('/produtos/:id', (req, res) => {
 
     res.json({ mensagem: 'Produto apagado com sucesso!' });
   } catch (erro) {
-    // Se o produto estiver preso a um pedido, o banco bloqueia e cai aqui
     if (erro.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
       return res.status(409).json({ erro: 'Não é possível deletar este produto pois ele está vinculado a pedidos existentes.' });
     }
@@ -223,11 +263,12 @@ app.delete('/produtos/:id', (req, res) => {
 
 // ===== PEDIDOS =====
 
-app.post('/pedidos', (req, res) => {
-  const { usuario_id, itens } = req.body;
+// Rota protegida pelo middleware 'autenticar'
+app.post('/pedidos', autenticar, (req, res) => {
+  const usuario_id = req.usuario.id; // Extraído de forma segura direto do token decodificado
+  const { itens } = req.body;
 
   if (
-    typeof usuario_id !== 'number' ||
     !Array.isArray(itens) ||
     itens.length === 0 ||
     itens.some(item =>
@@ -238,7 +279,7 @@ app.post('/pedidos', (req, res) => {
     )
   ) {
     return res.status(400).json({
-      erro: 'Informe usuario_id (número) e itens (lista não vazia, cada item com produto_id e quantidade inteira maior que zero).'
+      erro: 'Informe itens (lista não vazia, cada item com produto_id e quantidade inteira maior que zero).'
     });
   }
 
@@ -259,11 +300,9 @@ app.post('/pedidos', (req, res) => {
 });
 
 app.get('/pedidos/:id', (req, res) => {
-  // 1. Pega o id do pedido que veio na URL
   const id = req.params.id;
 
   try {
-    // 2. Junta itens_pedido com produtos, só do pedido pedido
     const stmt = db.prepare(`
       SELECT produtos.nome, produtos.preco, itens_pedido.quantidade
       FROM itens_pedido
@@ -271,20 +310,16 @@ app.get('/pedidos/:id', (req, res) => {
       WHERE itens_pedido.pedido_id = ?
     `);
 
-    // 3. Lista com os itens do pedido (cada item é um objeto)
     const itens = stmt.all(id);
 
-    // 4. Lista vazia = pedido inexistente (ou sem itens)
     if (itens.length === 0) {
       return res.status(404).json({ erro: 'Pedido não encontrado.' });
     }
 
-    // 5. Soma preço × quantidade de cada item
     const total = itens.reduce((acumulador, itemAtual) => {
       return acumulador + itemAtual.preco * itemAtual.quantidade;
     }, 0);
 
-    // 6. Devolve o pedido, os itens e o total
     res.json({ pedido_id: Number(id), itens, total });
   } catch (erro) {
     res.status(500).json({ erro: 'Erro interno ao buscar pedido.' });
