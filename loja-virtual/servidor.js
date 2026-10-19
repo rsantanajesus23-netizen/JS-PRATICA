@@ -299,28 +299,36 @@ app.post('/pedidos', autenticar, (req, res) => {
   }
 });
 
-app.get('/pedidos/:id', (req, res) => {
+app.get('/pedidos/:id', autenticar, (req, res) => {
+  // 1. Pega o id do pedido que veio na URL
   const id = req.params.id;
 
   try {
+    // 2. Busca o pedido e confere de quem ele é
+    const pedido = db.prepare('SELECT * FROM pedidos WHERE id = ?').get(id);
+
+    // 3. Pedido que não existe, ou que é de outra pessoa: a mesma resposta
+    //    (assim ninguém descobre quais pedidos existem)
+    if (!pedido || pedido.usuario_id !== req.usuario.id) {
+      return res.status(404).json({ erro: 'Pedido não encontrado.' });
+    }
+
+    // 4. Junta itens_pedido com produtos, só desse pedido
     const stmt = db.prepare(`
       SELECT produtos.nome, produtos.preco, itens_pedido.quantidade
       FROM itens_pedido
       JOIN produtos ON itens_pedido.produto_id = produtos.id
       WHERE itens_pedido.pedido_id = ?
     `);
-
     const itens = stmt.all(id);
 
-    if (itens.length === 0) {
-      return res.status(404).json({ erro: 'Pedido não encontrado.' });
-    }
-
+    // 5. Soma preço × quantidade de cada item (pedido sem itens dá 0)
     const total = itens.reduce((acumulador, itemAtual) => {
       return acumulador + itemAtual.preco * itemAtual.quantidade;
     }, 0);
 
-    res.json({ pedido_id: Number(id), itens, total });
+    // 6. Devolve o pedido, os itens e o total
+    res.json({ pedido_id: pedido.id, itens, total });
   } catch (erro) {
     res.status(500).json({ erro: 'Erro interno ao buscar pedido.' });
   }
