@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Loja</title>
+</head>
+<body>
+    <h1>Minha Loja</h1>
+    <form action="" id="form-produto">
+    <label for="nome-produto">Nome</label>
+    <input type="text" name="nome" id="nome-produto" required>
+
+    <label for="preco-produto">Preço</label>
+    <input type="number" name="preco" id="preco-produto" step="0.01" min="0" required>
+    
+    <button type="submit">Cadastrar Produto</button>
+</form>
+    <ul id="lista-produtos"></ul>
+    <script src="script.js"></script>
+</body>
+</html>

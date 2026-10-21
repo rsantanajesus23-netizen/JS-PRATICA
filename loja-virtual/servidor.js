@@ -4,6 +4,8 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const app = express();
+app.use(express.static('public'));
+
 const PORT = 3000;
 
 // 1. Lê a chave do .env (process.env guarda as variáveis de ambiente)
