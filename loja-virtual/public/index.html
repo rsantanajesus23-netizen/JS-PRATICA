@@ -7,16 +7,33 @@
 </head>
 <body>
     <h1>Minha Loja</h1>
-    <form action="" id="form-produto">
+
+<form id="form-login">
+    <label for="email-login">Email</label>
+    <input type="email" id="email-login" required>
+
+    <label for="senha-login">Senha</label>
+    <input type="password" id="senha-login" required>
+
+    <button type="submit">Entrar</button>
+</form>
+    <p id="mensagem-produto"></p>
+
+<p id="mensagem-login"></p>
+<button id="botao-sair" hidden>Sair</button>
+
+<form id="form-produto" hidden>
     <label for="nome-produto">Nome</label>
     <input type="text" name="nome" id="nome-produto" required>
 
     <label for="preco-produto">Preço</label>
     <input type="number" name="preco" id="preco-produto" step="0.01" min="0" required>
-    
+
     <button type="submit">Cadastrar Produto</button>
 </form>
+
     <ul id="lista-produtos"></ul>
+    
     <script src="script.js"></script>
 </body>
 </html>

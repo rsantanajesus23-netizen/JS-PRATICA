@@ -1,58 +1,137 @@
+// ===== LISTA DE PRODUTOS =====
 async function carregarProdutos() {
-    try{
+    try {
         const listaProdutos = document.getElementById('lista-produtos');
-        const resposta = await fetch ('/produtos');
+        const resposta = await fetch('/produtos');
 
         if (!resposta.ok) {
-            throw new Error ('Falha ao buscar os produtos.');
+            throw new Error('Falha ao buscar os produtos.');
         }
-        
+
         const produtos = await resposta.json();
 
         listaProdutos.innerHTML = '';
 
-        produtos.forEach(produto =>{
+        produtos.forEach(produto => {
             const li = document.createElement('li');
             li.textContent = `${produto.nome} - R$ ${produto.preco}`;
             listaProdutos.appendChild(li);
         });
 
-    }catch (erro){
+    } catch (erro) {
         console.error('Erro ao carregar produtos:', erro);
     }
 }
 
-const formProduto = document.getElementById('form-produto');
+// ===== LOGIN =====
 
-formProduto.addEventListener('submit', async (e) => {
-  e.preventDefault();
+// 1. Acha os elementos do login
+const formLogin = document.getElementById('form-login');
+const campoEmail = document.getElementById('email-login');
+const campoSenha = document.getElementById('senha-login');
+const mensagemLogin = document.getElementById('mensagem-login');
+const botaoSair = document.getElementById('botao-sair');
 
-  
-  const nome = document.getElementById('nome-produto').value;
-  const preco = Number(document.getElementById('preco-produto').value);
+// 2. Mostra ou esconde as partes da página conforme exista token guardado
+function atualizarTela() {
+    const logado = sessionStorage.getItem('token') !== null;
 
-  try {
-    
-    const resposta = await fetch('/produtos', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ nome, preco })
-    });
+    formLogin.hidden = logado;
+    document.getElementById('form-produto').hidden = !logado;
+    botaoSair.hidden = !logado;
+}
 
-    if (!resposta.ok) {
-      throw new Error('Falha ao cadastrar o produto.');
+// 3. Enviar o login
+formLogin.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    try {
+        const resposta = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: campoEmail.value, senha: campoSenha.value })
+        });
+
+        // 4. Lê a resposta antes de conferir: no erro, o servidor explica o motivo
+        const dados = await resposta.json();
+
+        if (!resposta.ok) {
+            mensagemLogin.textContent = dados.erro;
+            return;
+        }
+
+        // 5. Guarda o token e atualiza a tela
+        sessionStorage.setItem('token', dados.token);
+        mensagemLogin.textContent = '';
+        formLogin.reset();
+        atualizarTela();
+    } catch (erro) {
+        mensagemLogin.textContent = 'Não foi possível entrar agora.';
+        console.error('Erro no login:', erro);
     }
-
-    
-    formProduto.reset();
-    carregarProdutos();
-
-  } catch (erro) {
-    console.error('Erro ao cadastrar:', erro);
-  }
 });
 
-carregarProdutos();
+// 6. Sair
+botaoSair.addEventListener('click', () => {
+    sessionStorage.removeItem('token');
+    atualizarTela();
+});
 
+// ===== CADASTRO DE PRODUTO =====
+
+// 1. Acha o formulário, os campos e o lugar das mensagens
+const form = document.getElementById('form-produto');
+const campoNome = document.getElementById('nome-produto');
+const campoPreco = document.getElementById('preco-produto');
+const mensagemProduto = document.getElementById('mensagem-produto');
+
+// 2. Quando enviar o formulário, roda essa função
+form.addEventListener('submit', async (e) => {
+    // 3. Segura o envio normal, que recarregaria a página
+    e.preventDefault();
+
+    // 4. Lê os campos; o preço vira número aqui
+    const nome = campoNome.value;
+    const preco = Number(campoPreco.value);
+
+    try {
+        // 5. O cabeçalho Authorization leva o token guardado no login
+        const resposta = await fetch('/produtos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ nome, preco })
+        });
+
+        // 6. Token vencido ou inválido: volta pra tela de login
+        if (resposta.status === 401) {
+            sessionStorage.removeItem('token');
+            atualizarTela();
+            mensagemLogin.textContent = 'Sessão expirada. Entre de novo.';
+            return;
+        }
+
+        // 7. Logado, mas não é o dono da loja
+        if (resposta.status === 403) {
+            mensagemProduto.textContent = 'Apenas o dono da loja pode cadastrar produtos.';
+            return;
+        }
+
+        if (!resposta.ok) {
+            throw new Error('Falha ao cadastrar o produto.');
+        }
+
+        // 8. Deu certo: limpa a mensagem e os campos, e recarrega a lista
+        mensagemProduto.textContent = '';
+        form.reset();
+        carregarProdutos();
+    } catch (erro) {
+        console.error('Erro ao cadastrar produto:', erro);
+    }
+});
+
+// ===== AO ABRIR A PÁGINA =====
+atualizarTela();
+carregarProdutos();

@@ -19,6 +19,15 @@ if (!JWT_SECRET) {
 
 app.use(express.json());
 
+// 3. O e-mail do dono da loja também vem do .env
+const EMAIL_DONO = process.env.EMAIL_DONO;
+
+// 4. Sem ele, ninguém conseguiria cadastrar produto; melhor avisar na hora
+if (!EMAIL_DONO) {
+  console.error('Falta EMAIL_DONO no arquivo .env');
+  process.exit(1);
+}
+
 const db = new Database('loja.db', { verbose: console.log });
 
 db.exec(`
@@ -103,6 +112,24 @@ const autenticar = (req, res, next) => {
   });
 };
 
+// Só deixa passar o dono da loja (precisa vir depois do autenticar)
+function apenasDono(req, res, next) {
+  try {
+    // 1. O autenticar já guardou quem é o usuário em req.usuario
+    // 2. Busca o e-mail desse usuário no banco
+    const usuario = db.prepare('SELECT email FROM usuarios_loja WHERE id = ?').get(req.usuario.id);
+
+    // 3. Só passa se o e-mail for o do dono
+    if (!usuario || usuario.email !== EMAIL_DONO) {
+      return res.status(403).json({ erro: 'Apenas o dono da loja pode fazer isso.' });
+    }
+
+    next();
+  } catch (erro) {
+    res.status(500).json({ erro: 'Erro interno ao conferir o dono da loja.' });
+  }
+}
+
 app.get('/', (req, res) => {
   res.send('Servidor e banco loja.db rodando com sucesso!');
 });
@@ -185,7 +212,7 @@ app.post('/login', async (req, res) => {
 
 // ===== PRODUTOS =====
 
-app.post('/produtos', (req, res) => {
+app.post('/produtos', autenticar, apenasDono, (req, res) => {
   const { nome, preco } = req.body;
 
   if (!nome || typeof preco !== 'number' || preco < 0) {
@@ -220,7 +247,7 @@ app.get('/produtos', (req, res) => {
   }
 });
 
-app.put('/produtos/:id', (req, res) => {
+app.put('/produtos/:id', autenticar, apenasDono, (req, res) => {
   const id = req.params.id;
   const { nome, preco } = req.body;
 
@@ -242,7 +269,7 @@ app.put('/produtos/:id', (req, res) => {
   }
 });
 
-app.delete('/produtos/:id', (req, res) => {
+app.delete('/produtos/:id', autenticar, apenasDono, (req, res) => {
   const id = req.params.id;
 
   try {
