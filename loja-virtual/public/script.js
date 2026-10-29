@@ -37,6 +37,8 @@ function atualizarTela() {
     const logado = sessionStorage.getItem('token') !== null;
 
     formLogin.hidden = logado;
+    formCadastro.hidden = logado;
+    mensagemCadastro.hidden = logado;
     document.getElementById('form-produto').hidden = !logado;
     botaoSair.hidden = !logado;
 }
@@ -74,6 +76,7 @@ formLogin.addEventListener('submit', async (e) => {
 // 6. Sair
 botaoSair.addEventListener('click', () => {
     sessionStorage.removeItem('token');
+    mensagemProduto.textContent = '';
     atualizarTela();
 });
 
@@ -129,6 +132,52 @@ form.addEventListener('submit', async (e) => {
         carregarProdutos();
     } catch (erro) {
         console.error('Erro ao cadastrar produto:', erro);
+    }
+});
+
+      // ===== CADASTRO =====
+// 1. Acha os elementos do formulário de cadastro
+
+
+const formCadastro = document.getElementById('form-cadastro');
+const campoNomeCadastro = document.getElementById('nome-cadastro');
+const campoEmailCadastro = document.getElementById('email-cadastro');
+const campoSenhaCadastro = document.getElementById('senha-cadastro');
+const mensagemCadastro = document.getElementById('mensagem-cadastro');
+
+formCadastro.addEventListener('submit', async (e) => {
+    e.preventDefault(); // Impede a página de recarregar
+
+    try {
+        // 3. Faz o fetch para a rota POST /cadastro do seu backend
+        const resposta = await fetch('/cadastro', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                nome: campoNomeCadastro.value,
+                email: campoEmailCadastro.value,
+                senha: campoSenhaCadastro.value
+            })
+        });
+        // 4. Lê a resposta do servidor em JSON
+        const dados = await resposta.json();
+
+        // Se o servidor retornar erro (ex: e-mail já cadastrado)
+        if (!resposta.ok) {
+            mensagemCadastro.textContent = dados.erro;
+            mensagemCadastro.style.color = 'red';
+            return;
+        }
+
+        // 5. Se der tudo certo
+        mensagemCadastro.textContent = dados.mensagem; // "Usuário cadastrado com sucesso!"
+        mensagemCadastro.style.color = 'green';
+        formCadastro.reset(); // Limpa os campos do formulário
+
+    } catch (erro) {
+        mensagemCadastro.textContent = 'Não foi possível cadastrar agora.';
+        mensagemCadastro.style.color = 'red';
+        console.error('Erro no cadastro:', erro);
     }
 });
 

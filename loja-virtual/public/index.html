@@ -3,23 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
     <title>Minha Loja</title>
 </head>
 <body>
     <h1>Minha Loja</h1>
 
 <form id="form-login">
-    <label for="email-login">Email</label>
-    <input type="email" id="email-login" required>
+    <div class="form-loja">
+        <label for="email-login">Email</label>
+        <input type="email" id="email-login" required>
+    </div>
 
-    <label for="senha-login">Senha</label>
-    <input type="password" id="senha-login" required>
+    <div class="form-loja">
+        <label for="senha-login">Senha</label>
+        <input type="password" id="senha-login" required>
+    </div>
 
     <button type="submit">Entrar</button>
 </form>
-    <p id="mensagem-produto"></p>
+<p id="mensagem-produto"></p>
 
 <p id="mensagem-login"></p>
+
+<form id="form-cadastro">
+    <h2>Criar conta</h2>
+    <div class="campo-form">
+        <label for="nome-cadastro">Nome</label>
+        <input type="text" id="nome-cadastro" required>
+    </div>
+
+    <div class="campo-form">
+        <label for="email-cadastro">Email</label>
+        <input type="email" id="email-cadastro" required>
+    </div>
+
+    <div class="campo-form">
+        <label for="senha-cadastro">Senha</label>
+        <input type="password" id="senha-cadastro" minlength="6" required>
+    </div>
+
+    <button type="submit">Criar conta</button>
+</form>
+<p id="mensagem-cadastro"></p>
+
 <button id="botao-sair" hidden>Sair</button>
 
 <form id="form-produto" hidden>
