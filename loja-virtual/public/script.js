@@ -1,3 +1,108 @@
+// ===== CARRINHO DE COMPRAS =====
+const carrinho = [];
+
+const listaCarrinho = document.getElementById('lista-carrinho');
+const totalCarrinho = document.getElementById('total-carrinho');
+const botaoFinalizar = document.getElementById('botao-finalizar');
+const mensagemCarrinho = document.getElementById('mensagem-carrinho');
+
+function renderizarCarrinho() {
+    listaCarrinho.innerHTML = '';
+
+    if (carrinho.length === 0) {
+        listaCarrinho.innerHTML = '<li>O carrinho está vazio.</li>';
+        totalCarrinho.textContent = 'Total: R$ 0.00';
+        return;
+    }
+
+    carrinho.forEach(item => {
+        const li = document.createElement('li');
+        li.textContent = `${item.nome} x ${item.quantidade} - R$ ${(item.preco * item.quantidade).toFixed(2)}`;
+        listaCarrinho.appendChild(li);
+    });
+
+    const valorTotal = carrinho.reduce((acumulador, itemAtual) => {
+        return acumulador + (itemAtual.preco * itemAtual.quantidade);
+    }, 0);
+
+    totalCarrinho.textContent = `Total: R$ ${valorTotal.toFixed(2)}`;
+}
+
+function adicionarAoCarrinho(produto) {
+    const existente = carrinho.find(item => item.produto_id === produto.id);
+
+    if (existente) {
+        existente.quantidade += 1;
+    } else {
+        carrinho.push({
+            produto_id: produto.id,
+            nome: produto.nome,
+            preco: produto.preco,
+            quantidade: 1
+        });
+    }
+
+    renderizarCarrinho();
+}
+
+botaoFinalizar.addEventListener('click', async () => {
+    const token = sessionStorage.getItem('token');
+
+    if (!token) {
+        mensagemCarrinho.textContent = 'Você precisa estar logado para finalizar o pedido.';
+        mensagemCarrinho.style.color = 'red';
+        return;
+    }
+    if (carrinho.length === 0) {
+    mensagemCarrinho.textContent = 'O carrinho está vazio.';
+    mensagemCarrinho.style.color = 'red';
+    return;
+}
+
+    const itensParaEnviar = carrinho.map(item => ({
+        produto_id: item.produto_id,
+        quantidade: item.quantidade
+    }));
+
+    try {
+        const resposta = await fetch('/pedidos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ itens: itensParaEnviar })
+        });
+
+        const dados = await resposta.json();
+
+        if (resposta.status === 401) {
+            sessionStorage.removeItem('token');
+            atualizarTela();
+            mensagemLogin.textContent = 'Sessão expirada. Entre de novo.';
+            return;
+        }
+
+        if (!resposta.ok) {
+            mensagemCarrinho.textContent = dados.erro || 'Erro ao finalizar o pedido.';
+            mensagemCarrinho.style.color = 'red';
+            return;
+        }
+
+        mensagemCarrinho.textContent = `${dados.mensagem} ID do pedido: ${dados.pedido_id}`;
+        mensagemCarrinho.style.color = 'green';
+
+        carrinho.length = 0;
+        renderizarCarrinho();
+
+    } catch (erro) {
+        mensagemCarrinho.textContent = 'Erro de conexão ao finalizar o pedido.';
+        mensagemCarrinho.style.color = 'red';
+        console.error('Erro no pedido:', erro);
+    }
+});
+
+
 // ===== LISTA DE PRODUTOS =====
 async function carregarProdutos() {
     try {
@@ -14,7 +119,15 @@ async function carregarProdutos() {
 
         produtos.forEach(produto => {
             const li = document.createElement('li');
-            li.textContent = `${produto.nome} - R$ ${produto.preco}`;
+            li.textContent = `${produto.nome} - R$ ${produto.preco.toFixed(2)} `;
+
+            const botaoAdicionar = document.createElement('button');
+            botaoAdicionar.textContent = 'Adicionar';
+            botaoAdicionar.addEventListener('click', () => {
+                adicionarAoCarrinho(produto);
+            });
+
+            li.appendChild(botaoAdicionar);
             listaProdutos.appendChild(li);
         });
 
@@ -77,6 +190,9 @@ formLogin.addEventListener('submit', async (e) => {
 botaoSair.addEventListener('click', () => {
     sessionStorage.removeItem('token');
     mensagemProduto.textContent = '';
+    mensagemCarrinho.textContent = '';
+    carrinho.length = 0;
+    renderizarCarrinho();
     atualizarTela();
 });
 
@@ -135,10 +251,7 @@ form.addEventListener('submit', async (e) => {
     }
 });
 
-      // ===== CADASTRO =====
-// 1. Acha os elementos do formulário de cadastro
-
-
+// ===== CADASTRO DE USUÁRIO =====
 const formCadastro = document.getElementById('form-cadastro');
 const campoNomeCadastro = document.getElementById('nome-cadastro');
 const campoEmailCadastro = document.getElementById('email-cadastro');
@@ -146,10 +259,9 @@ const campoSenhaCadastro = document.getElementById('senha-cadastro');
 const mensagemCadastro = document.getElementById('mensagem-cadastro');
 
 formCadastro.addEventListener('submit', async (e) => {
-    e.preventDefault(); // Impede a página de recarregar
+    e.preventDefault();
 
     try {
-        // 3. Faz o fetch para a rota POST /cadastro do seu backend
         const resposta = await fetch('/cadastro', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -159,20 +271,18 @@ formCadastro.addEventListener('submit', async (e) => {
                 senha: campoSenhaCadastro.value
             })
         });
-        // 4. Lê a resposta do servidor em JSON
+        
         const dados = await resposta.json();
 
-        // Se o servidor retornar erro (ex: e-mail já cadastrado)
         if (!resposta.ok) {
             mensagemCadastro.textContent = dados.erro;
             mensagemCadastro.style.color = 'red';
             return;
         }
 
-        // 5. Se der tudo certo
-        mensagemCadastro.textContent = dados.mensagem; // "Usuário cadastrado com sucesso!"
+        mensagemCadastro.textContent = dados.mensagem;
         mensagemCadastro.style.color = 'green';
-        formCadastro.reset(); // Limpa os campos do formulário
+        formCadastro.reset();
 
     } catch (erro) {
         mensagemCadastro.textContent = 'Não foi possível cadastrar agora.';
@@ -184,3 +294,4 @@ formCadastro.addEventListener('submit', async (e) => {
 // ===== AO ABRIR A PÁGINA =====
 atualizarTela();
 carregarProdutos();
+renderizarCarrinho();

@@ -325,6 +325,7 @@ app.post('/pedidos', autenticar, (req, res) => {
     }
 
     res.status(500).json({ erro: 'Erro interno ao processar o pedido.' });
+    
   }
 });
 
