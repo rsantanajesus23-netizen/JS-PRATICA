@@ -102,9 +102,42 @@ botaoFinalizar.addEventListener('click', async () => {
     }
 });
 
+// ===== APAGAR PRODUTO =====
+async function apagarProduto(id) {
+    const token = sessionStorage.getItem('token');
+
+    if (!token) {
+        alert('Você precisa estar logado como dono para apagar produtos.');
+        return;
+    }
+
+    try {
+        const resposta = await fetch(`/produtos/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const dados = await resposta.json();
+
+        if (!resposta.ok) {
+            alert(dados.erro || 'Erro ao apagar o produto.');
+            return;
+        }
+
+        carregarProdutos();
+
+    } catch (erro) {
+        console.error('Erro ao apagar produto:', erro);
+        alert('Não foi possível conectar ao servidor para apagar o produto.');
+    }
+}
 
 // ===== LISTA DE PRODUTOS =====
 async function carregarProdutos() {
+
+    const ehDono = await verificarPerfil();
     try {
         const listaProdutos = document.getElementById('lista-produtos');
         const resposta = await fetch('/produtos');
@@ -128,6 +161,18 @@ async function carregarProdutos() {
             });
 
             li.appendChild(botaoAdicionar);
+
+            if (ehDono) {
+                const botaoApagar = document.createElement('button');
+                botaoApagar.textContent = 'Apagar';
+                botaoApagar.style.marginLeft = '5px';
+                botaoApagar.style.color = 'red';
+                botaoApagar.addEventListener('click', () => {
+                    apagarProduto(produto.id);
+                });
+                li.appendChild(botaoApagar);
+            }
+
             listaProdutos.appendChild(li);
         });
 
@@ -185,6 +230,28 @@ formLogin.addEventListener('submit', async (e) => {
         console.error('Erro no login:', erro);
     }
 });
+
+async function verificarPerfil() {
+    const token = sessionStorage.getItem('token');
+    if (!token) return false; // Se não tem token, com certeza não é o dono
+
+    try {
+        const resposta = await fetch('/perfil', {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (resposta.ok) {
+            const dados = await resposta.json();
+            return dados.ehDono; // Retorna true ou false vindo do servidor
+        }
+        
+        return false;
+    } catch (erro) {
+        console.error('Erro ao verificar perfil:', erro);
+        return false;
+    }
+}
 
 // 6. Sair
 botaoSair.addEventListener('click', () => {

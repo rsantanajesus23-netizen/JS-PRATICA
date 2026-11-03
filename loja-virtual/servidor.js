@@ -364,6 +364,24 @@ app.get('/pedidos/:id', autenticar, (req, res) => {
   }
 });
 
+app.get('/perfil', autenticar, (req, res) => {
+  try {
+    const usuario = db.prepare('SELECT email FROM usuarios_loja WHERE id = ?').get(req.usuario.id);
+
+    if (!usuario) {
+      return res.status(404).json({ erro: 'Usuário não encontrado.' });
+    }
+
+    res.json({
+      id: req.usuario.id,
+      ehDono: usuario.email === EMAIL_DONO
+    });
+
+  } catch (erro) {
+    res.status(500).json({ erro: 'Erro interno ao verificar perfil.' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
