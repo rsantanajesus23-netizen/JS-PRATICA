@@ -53,11 +53,12 @@ botaoFinalizar.addEventListener('click', async () => {
         mensagemCarrinho.style.color = 'red';
         return;
     }
+
     if (carrinho.length === 0) {
-    mensagemCarrinho.textContent = 'O carrinho está vazio.';
-    mensagemCarrinho.style.color = 'red';
-    return;
-}
+        mensagemCarrinho.textContent = 'O carrinho está vazio.';
+        mensagemCarrinho.style.color = 'red';
+        return;
+    }
 
     const itensParaEnviar = carrinho.map(item => ({
         produto_id: item.produto_id,
@@ -102,6 +103,28 @@ botaoFinalizar.addEventListener('click', async () => {
     }
 });
 
+// ===== VERIFICAR PERFIL =====
+async function verificarPerfil() {
+    const token = sessionStorage.getItem('token');
+    if (!token) return false;
+
+    try {
+        const resposta = await fetch('/perfil', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (resposta.ok) {
+            const dados = await resposta.json();
+            return dados.ehDono;
+        }
+
+        return false;
+    } catch (erro) {
+        console.error('Erro ao verificar perfil:', erro);
+        return false;
+    }
+}
+
 // ===== APAGAR PRODUTO =====
 async function apagarProduto(id) {
     const token = sessionStorage.getItem('token');
@@ -136,8 +159,8 @@ async function apagarProduto(id) {
 
 // ===== LISTA DE PRODUTOS =====
 async function carregarProdutos() {
-
     const ehDono = await verificarPerfil();
+
     try {
         const listaProdutos = document.getElementById('lista-produtos');
         const resposta = await fetch('/produtos');
@@ -182,26 +205,45 @@ async function carregarProdutos() {
 }
 
 // ===== LOGIN =====
-
-// 1. Acha os elementos do login
 const formLogin = document.getElementById('form-login');
 const campoEmail = document.getElementById('email-login');
 const campoSenha = document.getElementById('senha-login');
 const mensagemLogin = document.getElementById('mensagem-login');
 const botaoSair = document.getElementById('botao-sair');
 
-// 2. Mostra ou esconde as partes da página conforme exista token guardado
-function atualizarTela() {
-    const logado = sessionStorage.getItem('token') !== null;
+async function atualizarTela() {
+    const token = sessionStorage.getItem('token');
+    const logado = token !== null;
 
     formLogin.hidden = logado;
     formCadastro.hidden = logado;
     mensagemCadastro.hidden = logado;
-    document.getElementById('form-produto').hidden = !logado;
     botaoSair.hidden = !logado;
+
+    if (!logado) {
+        document.getElementById('form-produto').hidden = true;
+        return;
+    }
+
+    try {
+        const resposta = await fetch('/perfil', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!resposta.ok) {
+            document.getElementById('form-produto').hidden = true;
+            return;
+        }
+
+        const dados = await resposta.json();
+        document.getElementById('form-produto').hidden = !dados.ehDono;
+
+    } catch (erro) {
+        console.error('Erro ao atualizar tela:', erro);
+        document.getElementById('form-produto').hidden = true;
+    }
 }
 
-// 3. Enviar o login
 formLogin.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -212,7 +254,6 @@ formLogin.addEventListener('submit', async (e) => {
             body: JSON.stringify({ email: campoEmail.value, senha: campoSenha.value })
         });
 
-        // 4. Lê a resposta antes de conferir: no erro, o servidor explica o motivo
         const dados = await resposta.json();
 
         if (!resposta.ok) {
@@ -220,40 +261,17 @@ formLogin.addEventListener('submit', async (e) => {
             return;
         }
 
-        // 5. Guarda o token e atualiza a tela
         sessionStorage.setItem('token', dados.token);
         mensagemLogin.textContent = '';
         formLogin.reset();
         atualizarTela();
+        carregarProdutos();
     } catch (erro) {
         mensagemLogin.textContent = 'Não foi possível entrar agora.';
         console.error('Erro no login:', erro);
     }
 });
 
-async function verificarPerfil() {
-    const token = sessionStorage.getItem('token');
-    if (!token) return false; // Se não tem token, com certeza não é o dono
-
-    try {
-        const resposta = await fetch('/perfil', {
-            method: 'GET',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (resposta.ok) {
-            const dados = await resposta.json();
-            return dados.ehDono; // Retorna true ou false vindo do servidor
-        }
-        
-        return false;
-    } catch (erro) {
-        console.error('Erro ao verificar perfil:', erro);
-        return false;
-    }
-}
-
-// 6. Sair
 botaoSair.addEventListener('click', () => {
     sessionStorage.removeItem('token');
     mensagemProduto.textContent = '';
@@ -261,27 +279,22 @@ botaoSair.addEventListener('click', () => {
     carrinho.length = 0;
     renderizarCarrinho();
     atualizarTela();
+    carregarProdutos();
 });
 
 // ===== CADASTRO DE PRODUTO =====
-
-// 1. Acha o formulário, os campos e o lugar das mensagens
 const form = document.getElementById('form-produto');
 const campoNome = document.getElementById('nome-produto');
 const campoPreco = document.getElementById('preco-produto');
 const mensagemProduto = document.getElementById('mensagem-produto');
 
-// 2. Quando enviar o formulário, roda essa função
 form.addEventListener('submit', async (e) => {
-    // 3. Segura o envio normal, que recarregaria a página
     e.preventDefault();
 
-    // 4. Lê os campos; o preço vira número aqui
     const nome = campoNome.value;
     const preco = Number(campoPreco.value);
 
     try {
-        // 5. O cabeçalho Authorization leva o token guardado no login
         const resposta = await fetch('/produtos', {
             method: 'POST',
             headers: {
@@ -291,7 +304,6 @@ form.addEventListener('submit', async (e) => {
             body: JSON.stringify({ nome, preco })
         });
 
-        // 6. Token vencido ou inválido: volta pra tela de login
         if (resposta.status === 401) {
             sessionStorage.removeItem('token');
             atualizarTela();
@@ -299,7 +311,6 @@ form.addEventListener('submit', async (e) => {
             return;
         }
 
-        // 7. Logado, mas não é o dono da loja
         if (resposta.status === 403) {
             mensagemProduto.textContent = 'Apenas o dono da loja pode cadastrar produtos.';
             return;
@@ -309,7 +320,6 @@ form.addEventListener('submit', async (e) => {
             throw new Error('Falha ao cadastrar o produto.');
         }
 
-        // 8. Deu certo: limpa a mensagem e os campos, e recarrega a lista
         mensagemProduto.textContent = '';
         form.reset();
         carregarProdutos();
@@ -338,7 +348,7 @@ formCadastro.addEventListener('submit', async (e) => {
                 senha: campoSenhaCadastro.value
             })
         });
-        
+
         const dados = await resposta.json();
 
         if (!resposta.ok) {
@@ -359,6 +369,5 @@ formCadastro.addEventListener('submit', async (e) => {
 });
 
 // ===== AO ABRIR A PÁGINA =====
-atualizarTela();
-carregarProdutos();
+atualizarTela().then(() => carregarProdutos());
 renderizarCarrinho();

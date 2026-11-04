@@ -38,6 +38,12 @@ db.exec(`
   )
 `);
 
+try {
+  db.exec('ALTER TABLE produtos ADD COLUMN ativo INTEGER DEFAULT 1');
+} catch (e) {
+  
+}
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS usuarios_loja (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -238,7 +244,7 @@ app.post('/produtos', autenticar, apenasDono, (req, res) => {
 
 app.get('/produtos', (req, res) => {
   try {
-    const stmt = db.prepare('SELECT * FROM produtos');
+    const stmt = db.prepare('SELECT * FROM produtos WHERE ativo = 1');
     const produtos = stmt.all();
 
     res.json(produtos);
@@ -273,7 +279,7 @@ app.delete('/produtos/:id', autenticar, apenasDono, (req, res) => {
   const id = req.params.id;
 
   try {
-    const apagar = db.prepare('DELETE FROM produtos WHERE id = ?');
+    const apagar = db.prepare('UPDATE produtos SET ativo = 0 WHERE id = ?');
     const resultado = apagar.run(id);
 
     if (resultado.changes === 0) {
@@ -282,9 +288,6 @@ app.delete('/produtos/:id', autenticar, apenasDono, (req, res) => {
 
     res.json({ mensagem: 'Produto apagado com sucesso!' });
   } catch (erro) {
-    if (erro.code === 'SQLITE_CONSTRAINT_FOREIGNKEY') {
-      return res.status(409).json({ erro: 'Não é possível deletar este produto pois ele está vinculado a pedidos existentes.' });
-    }
 
     res.status(500).json({ erro: 'Erro interno ao apagar produto.' });
   }
