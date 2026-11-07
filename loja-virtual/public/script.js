@@ -1,5 +1,6 @@
 // ===== CARRINHO DE COMPRAS =====
 const carrinho = [];
+let produtos = [];
 
 const listaCarrinho = document.getElementById('lista-carrinho');
 const totalCarrinho = document.getElementById('total-carrinho');
@@ -17,7 +18,57 @@ function renderizarCarrinho() {
 
     carrinho.forEach(item => {
         const li = document.createElement('li');
-        li.textContent = `${item.nome} x ${item.quantidade} - R$ ${(item.preco * item.quantidade).toFixed(2)}`;
+        
+        const span = document.createElement('span');
+        span.textContent = `${item.nome} x ${item.quantidade} - R$ ${(item.preco * item.quantidade).toFixed(2)}`;
+        li.appendChild(span);
+
+        // Botão de aumentar (+) 
+        const botaoMais = document.createElement('button');
+        botaoMais.textContent = '+';
+        botaoMais.style.marginLeft = '10px';
+        botaoMais.style.padding = '2px 6px';
+        
+        botaoMais.addEventListener('click', () => {
+            item.quantidade += 1;
+            renderizarCarrinho();
+        });
+        li.appendChild(botaoMais);
+
+        // Botão de diminuir (−)
+        const botaoMenos = document.createElement('button');
+        botaoMenos.textContent = '−';
+        botaoMenos.style.marginLeft = '10px';
+        botaoMenos.style.padding = '2px 6px';
+        
+        botaoMenos.addEventListener('click', () => {
+            item.quantidade -= 1;
+
+            if (item.quantidade <= 0) {
+                const index = carrinho.findIndex(i => i.produto_id === item.produto_id);
+                if (index > -1) {
+                    carrinho.splice(index, 1);
+                }
+            }
+
+            renderizarCarrinho();
+        });
+        li.appendChild(botaoMenos);
+
+        // Botão de Lixeira (Excluir item de vez)
+        const botaoRemover = document.createElement('button');
+        botaoRemover.textContent = '🗑️'; 
+        botaoRemover.style.marginLeft = '5px';
+        botaoRemover.style.padding = '2px 6px';
+        botaoRemover.addEventListener('click', () => {
+            const index = carrinho.findIndex(i => i.produto_id === item.produto_id);
+            if (index > -1) {
+                carrinho.splice(index, 1); 
+            }
+            renderizarCarrinho();
+        });
+        li.appendChild(botaoRemover);
+
         listaCarrinho.appendChild(li);
     });
 
@@ -169,7 +220,7 @@ async function carregarProdutos() {
             throw new Error('Falha ao buscar os produtos.');
         }
 
-        const produtos = await resposta.json();
+        produtos = await resposta.json();
 
         listaProdutos.innerHTML = '';
 
@@ -186,6 +237,15 @@ async function carregarProdutos() {
             li.appendChild(botaoAdicionar);
 
             if (ehDono) {
+                const botaoEditar = document.createElement('button');
+                botaoEditar.textContent = 'Editar'
+                botaoEditar.style.marginLeft = '5px'
+                botaoEditar.style.color = 'orange'
+                botaoEditar.addEventListener('click', () => {
+                editarProdutoInline(produto, li);
+            });
+                li.appendChild(botaoEditar);
+
                 const botaoApagar = document.createElement('button');
                 botaoApagar.textContent = 'Apagar';
                 botaoApagar.style.marginLeft = '5px';
@@ -202,6 +262,61 @@ async function carregarProdutos() {
     } catch (erro) {
         console.error('Erro ao carregar produtos:', erro);
     }
+}
+
+// ===== EDITAR PRODUTO INLINE =====
+async function editarProdutoInline(produto, liElemento) {
+    const token = sessionStorage.getItem('token');
+    const conteudoOriginalHTML = liElemento.innerHTML;
+
+    liElemento.innerHTML = `
+        <input type="text" id="edit-nome-${produto.id}" value="${produto.nome}" style="width: 100px;">
+        <input type="number" id="edit-preco-${produto.id}" value="${produto.preco}" step="0.01" style="width: 60px;">
+        <button id="salvar-${produto.id}" style="color: green; margin-left: 5px;">Salvar</button>
+        <button id="cancelar-${produto.id}" style="color: gray; margin-left: 5px;">Cancelar</button>
+    `;
+
+    const btnSalvar = document.getElementById(`salvar-${produto.id}`);
+    const btnCancelar = document.getElementById(`cancelar-${produto.id}`);
+
+    btnCancelar.addEventListener('click', () => {
+        liElemento.innerHTML = conteudoOriginalHTML;
+        carregarProdutos();
+    });
+
+    btnSalvar.addEventListener('click', async () => {
+        const novoNome = document.getElementById(`edit-nome-${produto.id}`).value;
+        const novoPreco = Number(document.getElementById(`edit-preco-${produto.id}`).value);
+
+        if (!novoNome || novoPreco < 0) {
+            alert('Preencha um nome válido e um preço maior ou igual a zero.');
+            return;
+        }
+
+        try {
+            const resposta = await fetch(`/produtos/${produto.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ nome: novoNome, preco: novoPreco })
+            });
+
+            const dados = await resposta.json();
+
+            if (!resposta.ok) {
+                alert(dados.erro || 'Erro ao atualizar o produto.');
+                return;
+            }
+
+            carregarProdutos();
+
+        } catch (erro) {
+            console.error('Erro ao salvar edição:', erro);
+            alert('Erro de conexão ao salvar o produto.');
+        }
+    });
 }
 
 // ===== LOGIN =====
