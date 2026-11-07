@@ -360,10 +360,46 @@ app.get('/pedidos/:id', autenticar, (req, res) => {
       return acumulador + itemAtual.preco * itemAtual.quantidade;
     }, 0);
 
-    // 6. Devolve o pedido, os itens e o total
     res.json({ pedido_id: pedido.id, itens, total });
   } catch (erro) {
     res.status(500).json({ erro: 'Erro interno ao buscar pedido.' });
+  }
+});
+
+// ===== LISTAR PEDIDOS DO USUÁRIO LOGADO =====
+app.get('/pedidos', autenticar, (req, res) => {
+  const usuario_id = req.usuario.id; 
+
+  try {
+
+    const pedidos = db.prepare('SELECT id FROM pedidos WHERE usuario_id = ?').all(usuario_id);
+
+
+    const pedidosCompletos = pedidos.map(pedido => {
+      const stmt = db.prepare(`
+        SELECT produtos.nome, produtos.preco, itens_pedido.quantidade
+        FROM itens_pedido
+        JOIN produtos ON itens_pedido.produto_id = produtos.id
+        WHERE itens_pedido.pedido_id = ?
+      `);
+      const itens = stmt.all(pedido.id);
+
+      const total = itens.reduce((acumulador, item) => {
+        return acumulador + (item.preco * item.quantidade);
+      }, 0);
+
+      return {
+        pedido_id: pedido.id,
+        itens,
+        total
+      };
+    });
+
+    res.json(pedidosCompletos);
+
+  } catch (erro) {
+    console.error('Erro ao listar pedidos:', erro);
+    res.status(500).json({ erro: 'Erro interno ao buscar os pedidos.' });
   }
 });
 

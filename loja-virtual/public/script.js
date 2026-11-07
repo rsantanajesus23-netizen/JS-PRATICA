@@ -208,6 +208,63 @@ async function apagarProduto(id) {
     }
 }
 
+// ===== HISTÓRICO DE PEDIDOS =====
+const botaoMeusPedidos = document.getElementById('botao-meus-pedidos');
+const areaMeusPedidos = document.getElementById('area-pedidos'); 
+
+async function carregarPedidos() {
+    const token = sessionStorage.getItem('token');
+
+    if (!token) {
+        return;
+    }
+
+    try {
+        const resposta = await fetch('/pedidos', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!resposta.ok) {
+            throw new Error('Falha ao buscar os pedidos.');
+        }
+
+        const pedidos = await resposta.json();
+
+        if (areaMeusPedidos) {
+            areaMeusPedidos.innerHTML = '';
+
+            if (pedidos.length === 0) {
+                areaMeusPedidos.innerHTML = '<p>Você ainda não fez nenhum pedido.</p>';
+                return;
+            }
+
+            const ul = document.createElement('ul');
+
+            pedidos.forEach(p => {
+                const li = document.createElement('li');
+                const itensDescricao = p.itens.map(i => `${i.nome} (${i.quantidade}x)`).join(', ');
+                
+                li.textContent = `Pedido #${p.pedido_id} | Itens: ${itensDescricao} | Total: R$ ${p.total.toFixed(2)}`;
+                ul.appendChild(li);
+            });
+
+            areaMeusPedidos.appendChild(ul);
+        }
+
+    } catch (erro) {
+        console.error('Erro ao carregar pedidos:', erro);
+    }
+}
+
+
+botaoMeusPedidos.addEventListener('click', () => {
+    areaMeusPedidos.hidden = false;
+    carregarPedidos();
+});
+
 // ===== LISTA DE PRODUTOS =====
 async function carregarProdutos() {
     const ehDono = await verificarPerfil();
@@ -334,6 +391,7 @@ async function atualizarTela() {
     formCadastro.hidden = logado;
     mensagemCadastro.hidden = logado;
     botaoSair.hidden = !logado;
+    document.getElementById('botao-meus-pedidos').hidden = !logado;
 
     if (!logado) {
         document.getElementById('form-produto').hidden = true;
