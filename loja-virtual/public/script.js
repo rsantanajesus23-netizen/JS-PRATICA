@@ -261,8 +261,13 @@ async function carregarPedidos() {
 
 
 botaoMeusPedidos.addEventListener('click', () => {
-    areaMeusPedidos.hidden = false;
-    carregarPedidos();
+    if ( areaMeusPedidos.hidden) {
+        areaMeusPedidos.hidden = false;
+        carregarPedidos();
+    }else{
+        areaMeusPedidos.hidden = true;
+        areaMeusPedidos.innerHTML = '';
+    }
 });
 
 // ===== LISTA DE PRODUTOS =====
@@ -446,6 +451,8 @@ formLogin.addEventListener('submit', async (e) => {
 });
 
 botaoSair.addEventListener('click', () => {
+    areaMeusPedidos.hidden = true;
+    areaMeusPedidos.innerHTML = '';
     sessionStorage.removeItem('token');
     mensagemProduto.textContent = '';
     mensagemCarrinho.textContent = '';
