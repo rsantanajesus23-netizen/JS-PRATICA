@@ -548,6 +548,22 @@ formCadastro.addEventListener('submit', async (e) => {
     }
 });
 
+// Olhinho do login
+document.getElementById('toggle-senha-login').addEventListener('click', () => {
+    const campo = document.getElementById('senha-login');
+    const botao = document.getElementById('toggle-senha-login');
+    campo.type = campo.type === 'password' ? 'text' : 'password';
+    botao.innerHTML = campo.type === 'password' ? '<i class="fa fa-eye"></i>' : '<i class="fa fa-eye-slash"></i>';
+});
+
+// Olhinho do cadastro
+document.getElementById('toggle-senha-cadastro').addEventListener('click', () => {
+    const campo = document.getElementById('senha-cadastro');
+    const botao = document.getElementById('toggle-senha-cadastro');
+    campo.type = campo.type === 'password' ? 'text' : 'password';
+    botao.innerHTML = campo.type === 'password' ? '<i class="fa fa-eye"></i>' : '<i class="fa fa-eye-slash"></i>';
+});
+
 // ===== AO ABRIR A PÁGINA =====
 atualizarTela().then(() => carregarProdutos());
 renderizarCarrinho();

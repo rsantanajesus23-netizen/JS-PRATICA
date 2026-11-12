@@ -13,6 +13,7 @@
         <nav id="nav-usuario">
             <button id="botao-meus-pedidos" hidden>Meus Pedidos</button>
             <button id="botao-sair" hidden>Sair</button>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
         </nav>
     </header>
 
@@ -29,6 +30,7 @@
                 <div class="form-loja">
                     <label for="senha-login">Senha</label>
                     <input type="password" id="senha-login" required>
+                    <button type="button" id="toggle-senha-login"><i class="fa fa-eye"></i></button>
                 </div>
                 <button type="submit">Entrar</button>
                 <p id="mensagem-login"></p>
@@ -47,6 +49,7 @@
                 <div class="campo-form">
                     <label for="senha-cadastro">Senha</label>
                     <input type="password" id="senha-cadastro" minlength="6" required>
+                    <button type="button" id="toggle-senha-cadastro"><i class="fa fa-eye"></i></button>
                 </div>
                 <button type="submit">Criar conta</button>
                 <p id="mensagem-cadastro"></p>
