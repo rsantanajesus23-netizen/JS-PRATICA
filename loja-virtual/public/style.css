@@ -1,12 +1,55 @@
+/* ===== HEADER ===== */
+#cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #1a1a1a;
+    color: white;
+    padding: 16px 24px;
+    margin-bottom: 30px;
+}
+
+#cabecalho h1 {
+    margin: 0;
+    font-size: 22px;
+    letter-spacing: 1px;
+}
+
+#nav-usuario {
+    display: flex;
+    gap: 10px;
+}
+
+#nav-usuario button {
+    background-color: transparent;
+    border: 1px solid white;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#nav-usuario button:hover {
+    background-color: white;
+    color: #1a1a1a;
+}
+
+.toggle-senha {
+    width: auto;
+    padding: 6px 10px;
+    background-color: #705b8d;
+    margin-top: 4px;
+}
+
 body {
     font-family: Arial, sans-serif;
-    margin: 30px;
+    margin: 0;
 }
 
 form {
-    max-width: 350px;
+    max-width: 300px;
     background: #f9f9f9;
-    padding: 20px;
+    padding: 16px;
     border: 1px solid #ddd;
     border-radius: 8px;
     margin-bottom: 15px;
@@ -25,15 +68,19 @@ form {
 }
 
 .campo-form input {
-    padding: 8px;
+    padding: 4px;
     font-size: 14px;
     border: 1px solid #ccc;
     border-radius: 4px;
 }
 
+.campo-form button {
+    align-self: flex-start;
+}
+
 button {
     padding: 8px 10px;
-    background-color: #007BFF;
+    background-color: #381263e6;
     color: white;
     border: none;
     border-radius: 4px;
@@ -42,7 +89,7 @@ button {
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #48276ee0;
 }
 
 .form-loja label {
@@ -78,7 +125,7 @@ button:hover {
 
 #lista-produtos li button {
     padding: 6px 12px;
-    background-color: #007BFF;
+    background-color: #63717f;
     color: white;
     border: none;
     border-radius: 4px;
@@ -87,5 +134,5 @@ button:hover {
 }
 
 #lista-produtos li button:hover {
-    background-color: #0056b3;
+    background-color: #8395a7;
 }
