@@ -44,10 +44,17 @@
 body {
     font-family: Arial, sans-serif;
     margin: 0;
+    box-sizing: border-box;
+}
+
+main {
+    padding: 30px;
+    box-sizing: border-box;
 }
 
 form {
-    max-width: 300px;
+    flex: 1;
+    min-width: 250px;
     background: #f9f9f9;
     padding: 16px;
     border: 1px solid #ddd;
@@ -124,7 +131,7 @@ button:hover {
 }
 
 #lista-produtos li button {
-    padding: 6px 12px;
+    padding: 6px 10px;
     background-color: #63717f;
     color: white;
     border: none;
@@ -135,4 +142,55 @@ button:hover {
 
 #lista-produtos li button:hover {
     background-color: #8395a7;
+}
+
+/* ===== LAYOUT DUAS COLUNAS ===== */
+
+#area-loja{
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+#area-produtos {
+    flex: 2;
+}
+
+#area-carrinho{
+    flex: 1;
+    background: #f9f9f9;
+    border: 1px solid #ddd;
+    position: sticky;
+    top: 20px;
+    
+}
+
+#abas-auth {
+    display: flex;
+    gap: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #ddd;
+}
+
+#abas-auth button {
+    background: none;
+    color: #666;
+    border: none;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    padding: 8px 20px;
+    margin-bottom: -2px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+#abas-auth button.aba-ativa {
+    color: #1a1a1a;
+    border-bottom: 3px solid #1a1a1a;
+    font-weight: bold;
+}
+
+#abas-auth button:hover {
+    background: none;
+    color: #1a1a1a;
 }

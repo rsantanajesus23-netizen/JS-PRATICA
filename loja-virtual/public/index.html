@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <title>Minha Loja de Sapatos</title>
 </head>
 <body>
@@ -13,50 +14,40 @@
         <nav id="nav-usuario">
             <button id="botao-meus-pedidos" hidden>Meus Pedidos</button>
             <button id="botao-sair" hidden>Sair</button>
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
         </nav>
     </header>
 
     <main>
 
         <!-- Login e Cadastro -->
-        <section id="area-auth">
-            <form id="form-login">
-                <h2>Entrar</h2>
-                <div class="form-loja">
-                    <label for="email-login">Email</label>
-                    <input type="email" id="email-login" required>
-                </div>
-                <div class="form-loja">
-                    <label for="senha-login">Senha</label>
-                    <input type="password" id="senha-login" required>
-                    <button type="button" class="toggle-senha" id="toggle-senha-login"><i class="fa fa-eye"></i></button>
-                </div>
-                <button type="submit">Entrar</button>
-                <p id="mensagem-login"></p>
-            </form>
+<section id="area-auth">
+    <form id="form-auth">
+        <div id="abas-auth">
+            <button type="button" id="aba-entrar" class="aba-ativa">Entrar</button>
+            <button type="button" id="aba-cadastro">Criar conta</button>
+        </div>
 
-            <form id="form-cadastro">
-                <h2>Criar conta</h2>
-                <div class="campo-form">
-                    <label for="nome-cadastro">Nome</label>
-                    <input type="text" id="nome-cadastro" required>
-                </div>
+    <div id="campo-nome" hidden>
+        <div class="campo-form">
+            <label for="nome-cadastro">Nome</label>
+            <input type="text" id="nome-cadastro">
+        </div>
+    </div>
+        <div class="campo-form">
+            <label for="email-auth">Email</label>
+            <input type="email" id="email-auth" required>
+        </div>
 
-                <div class="campo-form">
-                    <label for="email-cadastro">Email</label>
-                    <input type="email" id="email-cadastro" required>
-                </div>
+        <div class="campo-form">
+            <label for="senha-auth">Senha</label>
+            <input type="password" id="senha-auth" required>
+            <button type="button" class="toggle-senha" id="toggle-senha-auth">👁️</button>
+        </div>
 
-                <div class="campo-form">
-                    <label for="senha-cadastro">Senha</label>
-                    <input type="password" id="senha-cadastro" minlength="6" required>
-                    <button type="button" class="toggle-senha" id="toggle-senha-cadastro"><i class="fa fa-eye"></i></button>
-                </div>
-                <button type="submit">Criar conta</button>
-                <p id="mensagem-cadastro"></p>
-            </form>
-        </section>
+        <button type="submit" id="botao-auth-submit">Entrar</button>
+        <p id="mensagem-auth"></p>
+    </form>
+</section>
 
         <!-- Histórico de pedidos -->
         <div id="area-pedidos" hidden></div>
